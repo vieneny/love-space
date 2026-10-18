@@ -22,7 +22,8 @@ if (isWechat && args.includes('build') && !localPreview) {
 }
 function configure() {
   if (!isWechat) return
-  const output = resolve(cwd, 'dist', args.includes('build') ? 'build' : 'dev', 'mp-weixin', 'project.config.json')
+  const outputDirectory = env.UNI_OUTPUT_DIR || resolve(cwd, 'dist', args.includes('build') ? 'build' : 'dev', 'mp-weixin')
+  const output = resolve(outputDirectory, 'project.config.json')
   if (!existsSync(output)) return
   const value = JSON.parse(readFileSync(output, 'utf8'))
   value.appid = appid

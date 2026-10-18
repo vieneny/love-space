@@ -5,14 +5,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const cliPath = 'C:\\Program Files (x86)\\Tencent\\微信web开发者工具\\cli.bat'
-const help = `微信同 WiFi 开发预览（不会上传正式体验版）
+const help = `微信开发预览（同 WiFi 或临时公网隧道；不会上传正式体验版）
 
 用法：
   pnpm preview:wechat --api-base-url http://192.168.1.100:18101
   pnpm preview:wechat --api-base-url http://192.168.1.100:18101 --check
+  pnpm preview:wechat --api-base-url https://your-tunnel.trycloudflare.com
 
 参数：
-  --api-base-url  必填，仅允许 RFC1918 私网 IPv4 的 HTTP 源地址
+  --api-base-url  必填，私网 IPv4 HTTP 或单层 trycloudflare.com 子域 HTTPS 源地址
   --check         仅校验参数与本地工具路径，不构建、不调用微信 CLI
   --help          显示说明
 
@@ -21,10 +22,14 @@ AppID 由小程序已有的 ignored 环境配置读取；开发身份登录强�
 `
 
 export function validateApiBaseUrl(value) {
+  if (typeof value === 'string' && !/[\s\\]/.test(value)
+      && /^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.trycloudflare\.com\/?$/i.test(value)) {
+    return new URL(value).origin
+  }
   // Validate the original spelling before URL parsing: URL normalizes octal,
   // shortened IPs and escaped input that must never reach a Windows shell.
-  const match = typeof value === 'string' && value.match(/^http:\/\/((?:0|[1-9]\d{0,2})(?:\.(?:0|[1-9]\d{0,2})){3})(?::([1-9]\d{0,4}))?\/?$/)
-  if (!match) throw new Error('--api-base-url 必须是 http://私网IPv4:端口，不带账号、路径、查询参数或片段。')
+  const match = typeof value === 'string' && !/[\s\\]/.test(value) && value.match(/^http:\/\/((?:0|[1-9]\d{0,2})(?:\.(?:0|[1-9]\d{0,2})){3})(?::([1-9]\d{0,4}))?\/?$/)
+  if (!match) throw new Error('--api-base-url 仅允许私网 IPv4 HTTP 或 trycloudflare.com 单层子域 HTTPS，不带账号、路径、查询参数或片段。')
   const octets = match[1].split('.').map(Number)
   const privateAddress = octets[0] === 10 || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) || (octets[0] === 192 && octets[1] === 168)
   if (octets.some(part => part > 255) || !privateAddress || (match[2] && Number(match[2]) > 65535)) {
@@ -59,9 +64,11 @@ export function quoteWindowsArgument(value) {
 
 function run(command, args, env) {
   return new Promise((resolveRun, reject) => {
-    const commandLine = `"${[command, ...args].map(quoteWindowsArgument).join(' ')}"`
-    const child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', commandLine], {
-      cwd: root, env, stdio: 'inherit', windowsVerbatimArguments: true,
+    const batch = /\.(?:bat|cmd)$/i.test(command)
+    const executable = batch ? process.env.ComSpec || 'cmd.exe' : command
+    const parameters = batch ? ['/d', '/s', '/c', `"${[command, ...args].map(quoteWindowsArgument).join(' ')}"`] : args
+    const child = spawn(executable, parameters, {
+      cwd: root, env, stdio: 'inherit', windowsVerbatimArguments: batch,
     })
     child.once('error', reject)
     child.once('exit', (code, signal) => {
@@ -90,8 +97,11 @@ export async function main(args = process.argv.slice(2)) {
   if (!existsSync(cliPath)) throw new Error('未找到微信开发者工具 cli.bat，请安装到文档所列路径。')
   const project = resolve(root, 'apps/miniapp/dist/build/mp-weixin')
   const qr = resolve(root, 'artifacts/wechat-phone-preview.png')
+  const rawQr = resolve(root, 'artifacts/wechat-phone-preview-source.jpg')
   const info = resolve(root, 'artifacts/wechat-phone-preview-info.json')
-  for (const value of [root, cliPath, project, qr, info]) quoteWindowsArgument(value)
+  const pythonPath = resolve(root, 'backend/.venv/Scripts/python.exe')
+  if (!existsSync(pythonPath)) throw new Error('二维码校验需要 backend 的 Windows Python 虚拟环境及 Pillow，请先安装后端依赖。')
+  for (const value of [root, cliPath, project, qr, rawQr, info]) quoteWindowsArgument(value)
   if (options.check) { console.log(`参数校验通过：${options.apiBaseUrl}；未构建、未调用微信 CLI。`); return }
 
   mkdirSync(dirname(qr), { recursive: true })
@@ -104,10 +114,11 @@ export async function main(args = process.argv.slice(2)) {
   try {
     // Remove previous results before any work so a failed run cannot reuse them.
     rmSync(qr, { force: true })
+    rmSync(rawQr, { force: true })
     rmSync(info, { force: true })
     const env = { ...process.env, VITE_API_BASE_URL: options.apiBaseUrl, VITE_API_BASE: options.apiBaseUrl, VITE_ENABLE_DEV_LOGIN: 'false' }
-    console.log(`构建同 WiFi 开发预览：${options.apiBaseUrl}（开发身份登录关闭）`)
-    await run('pnpm', ['--dir', 'apps/miniapp', 'run', 'build:mp-weixin:preview', '--mode', 'development'], env)
+    console.log(`构建${options.apiBaseUrl.startsWith('https:') ? '临时公网' : '同 WiFi'}开发预览：${options.apiBaseUrl}（开发身份登录关闭）`)
+    await run(process.execPath, [resolve(root, 'apps/miniapp/scripts/uni.mjs'), 'build', '-p', 'mp-weixin', '--local-preview', '--mode', 'development'], env)
     const configFile = resolve(project, 'project.config.json')
     if (!existsSync(configFile)) throw new Error('构建未生成 project.config.json。')
     const config = JSON.parse(readFileSync(configFile, 'utf8'))
@@ -116,12 +127,27 @@ export async function main(args = process.argv.slice(2)) {
     writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n')
 
     const startedAt = Date.now()
-    await run(cliPath, ['preview', '--project', project, '--qr-format', 'image', '--qr-output', qr, '--info-output', info], env)
+    await run(cliPath, ['preview', '--project', project, '--qr-format', 'image', '--qr-output', rawQr, '--info-output', info], env)
+    if (!existsSync(rawQr) || statSync(rawQr).mtimeMs < startedAt - 2000) throw new Error('微信 CLI 未生成本次二维码图片，不能视为预览成功。')
+    // The official CLI may return JPEG even when its output path ends in .png.
+    // Decode the actual image and save a genuine PNG before reporting success.
+    await run(pythonPath, ['-c', [
+      'import sys',
+      'from PIL import Image',
+      'with Image.open(sys.argv[1]) as probe:',
+      '    assert probe.format in {"JPEG", "PNG"} and 0 < probe.width <= 4096 and 0 < probe.height <= 4096, "Invalid QR image"',
+      '    probe.verify()',
+      'with Image.open(sys.argv[1]) as image:',
+      '    image.convert("RGB").save(sys.argv[2], format="PNG")',
+    ].join('\n'), rawQr, qr], env)
     verifyFreshPng(qr, startedAt)
     console.log(`本次开发预览二维码已生成：${qr}`)
-    console.log('手机与电脑连接同一 WiFi；扫码后在小程序开发调试中关闭域名校验，并保持局域网后端运行。')
+    console.log(options.apiBaseUrl.startsWith('https:')
+      ? '保持电脑、后端与临时隧道运行；隧道地址变化后重新构建。扫码者需拥有该小程序的开发者权限，并在手机中开启调试模式。'
+      : '手机与电脑连接同一 WiFi；扫码后在小程序开发调试中关闭域名校验，并保持局域网后端运行。')
     console.log('这是开发预览，不是正式体验版。二维码成功不代表手机登录、请求或地图已验证。')
   } finally {
+    rmSync(rawQr, { force: true })
     closeSync(lockFd)
     rmSync(lock, { force: true })
   }

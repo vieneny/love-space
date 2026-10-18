@@ -8,6 +8,7 @@ from PIL import Image
 import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 
 from app.config import Settings
 from app.main import create_app
@@ -60,6 +61,25 @@ def photo(c, h):
     result = c.post(A + "/media", headers=h, files={"file": ("../unsafe.png", image.getvalue(), "image/png")})
     assert result.status_code == 200, result.text
     return result.json()
+
+
+def test_readiness_checks_database_and_private_media(client, monkeypatch):
+    assert client.get("/ready").status_code == 200
+    media_root = client.app.state.settings.media_root
+    media_root.rmdir()
+    assert client.get("/ready").status_code == 503
+    media_root.mkdir()
+
+    def unavailable():
+        raise OperationalError("deployment-test-connection-error", {}, Exception("unavailable"))
+
+    with monkeypatch.context() as patch:
+        patch.setattr(client.app.state.engine, "connect", unavailable)
+        response = client.get("/ready")
+        assert response.status_code == 503
+        assert response.json() == {"detail": "Service not ready"}
+        assert "deployment-test-connection-error" not in response.text
+    assert client.get("/ready").status_code == 200
 
 
 def test_two_spaces_private_and_shared_authorization(client):

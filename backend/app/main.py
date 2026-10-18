@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 import hashlib
+import os
 import secrets
 import warnings
 from zoneinfo import ZoneInfo
@@ -16,7 +17,7 @@ from PIL import Image, UnidentifiedImageError
 from pwdlib import PasswordHash
 from pydantic import ValidationError
 from sqlalchemy import select, update, delete, func, or_, and_
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from .config import Settings, get_settings
@@ -226,6 +227,16 @@ def create_app(settings: Settings | None = None):
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.get("/ready")
+    def ready(db: Session = Depends(db_session)):
+        try:
+            db.execute(select(1))
+        except SQLAlchemyError:
+            fail(503, "Service not ready")
+        if not cfg.media_root.is_dir() or not os.access(cfg.media_root, os.R_OK | os.W_OK | os.X_OK):
+            fail(503, "Service not ready")
+        return {"status": "ready"}
 
     def login_account(db, identity, nickname):
         user = db.scalar(select(User).where(User.identity == identity))

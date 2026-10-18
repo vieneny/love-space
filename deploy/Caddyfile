@@ -1,6 +1,15 @@
 {$PUBLIC_DOMAIN} {
     encode zstd gzip
+    handle /api/v1/app/media {
+        request_body {
+            max_size 12MB
+        }
+        reverse_proxy api:18100
+    }
     handle /api/* {
+        request_body {
+            max_size 256KB
+        }
         reverse_proxy api:18100
     }
     handle /health {

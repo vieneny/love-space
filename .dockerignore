@@ -1,13 +1,12 @@
-.git
-**/node_modules
-**/.venv
-**/__pycache__
-**/.pytest_cache
-**/.env
-**/.env.*
-**/data
-**/artifacts
-**/unpackage
-*.db
-*.pem
-deploy/backups
+# The web image only needs its Dockerfile, proxy config and built admin assets.
+# Keep backend credentials, private media and repository history out of BuildKit.
+**
+!deploy/
+!deploy/Dockerfile.web
+!deploy/Caddyfile
+!apps/
+!apps/admin/
+!apps/admin/dist/
+!apps/admin/dist/**
+!docs/
+!docs/THIRD_PARTY_NOTICES.txt

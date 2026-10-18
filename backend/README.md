@@ -14,7 +14,8 @@ uv run alembic upgrade head
 uv run uvicorn app.main:app --host 127.0.0.1 --port 18100 --reload --no-access-log
 ```
 
-API docs: `http://127.0.0.1:18100/docs`; live schema: `/openapi.json`; health: `/health`.
+API docs: `http://127.0.0.1:18100/docs`; live schema: `/openapi.json`; process health: `/health`.
+`/ready` returns 200 only when a database query succeeds and the private media directory is readable/writable; failures return a generic 503 without connection details. The Docker health check uses `/ready`, and Compose waits for API health before starting the web proxy. This does not replace a storage-capacity check or a restore rehearsal.
 Generate the checked-in schema with `uv run python -m app.export_openapi`.
 App routes are under `/api/v1/app`; admin routes under `/api/v1/admin`. JSON is returned directly; lists use `{ "items": [], "total": 0 }`. JSON dates are `YYYY-MM-DD`.
 
@@ -25,6 +26,16 @@ For WeChat `wx.request`, send edits as `POST` with the exact header `X-HTTP-Meth
 For production set `ENVIRONMENT=production`, `DEV_LOGIN_ENABLED=false`, `DATABASE_URL=postgresql+psycopg://...`, `JWT_SECRET` (at least 32 bytes), and `ADMIN_PASSWORD` (at least 12 characters). Missing/unsafe production configuration prevents startup. Run migrations before starting. Configure actual WeChat AppID/secret; without them real WeChat login returns 503 and never falls back to development. The real server exchange calls WeChat `jscode2session`; production account login still needs validation using an authorized real AppID/code.
 
 `PUBLIC_BASE_URL` defaults to `http://127.0.0.1:18100`. Media response URLs are relative and clients prefix their configured API origin. Configure exact `CORS_ORIGINS` for Web clients. The production reverse proxy must expose HTTPS; the application container is HTTP behind it. Keep port 18100 private behind that proxy. Do not log media query strings: signed URLs are temporary bearer capabilities.
+
+The supplied Caddy proxy limits multipart media requests to 12 MB and other API request bodies to 256 KB; the application independently enforces its 10 MiB image limit. Container logs rotate at 10 MB with three files per service. The backend Docker build excludes environment files, databases, private media, and the local virtual environment from its build context.
+
+## Restricted temporary preview gateway
+
+For an explicitly configured temporary preview tunnel, forward the tunnel to `127.0.0.1:18102`, where `app.preview_gateway:app` runs separately from the existing API. Follow `docs/PUBLIC_PREVIEW.md` at the repository root for the preview launcher. The gateway does not import the backend application, read `.env`, restart it, or enable development login.
+
+Set `PREVIEW_API_UPSTREAM` explicitly to the running API's private IPv4 HTTP origin, then start `uv run uvicorn app.preview_gateway:app --host 127.0.0.1 --port 18102 --no-access-log`. There is no default upstream. Only canonical RFC1918 IPv4 origins are accepted; DNS names, public/loopback/link-local addresses, credentials, URL paths and query strings prevent startup.
+
+The gateway allows `/health` (GET/HEAD) and `/api/v1/app/*`, while always rejecting development login, admin routes, docs/OpenAPI, escaped paths and path traversal. App authentication and signed media authorization still run in the existing API. It preserves authorization and the app PATCH override, removes hop-by-hop and untrusted forwarding headers, never follows redirects, ignores proxy environment variables, and uses bounded connection/I/O timeouts. POST multipart media bodies are capped at 12 MiB; every other request body is capped at 256 KiB, including chunked requests. Upstream errors return generic 502/504 responses. HTTP client verbose logs are suppressed; keep Uvicorn access logs off because signed media queries must not enter logs. This is a temporary development preview, not a production deployment or an official WeChat experience-version upload.
 
 ## Privacy and relationship lifecycle
 

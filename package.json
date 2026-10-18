@@ -12,6 +12,8 @@
     "build:miniapp": "pnpm --dir apps/miniapp build:mp-weixin",
     "build:miniapp:preview": "pnpm --dir apps/miniapp build:mp-weixin:preview",
     "preview:wechat": "node scripts/preview-wechat.mjs",
+    "prepare:wechat": "node scripts/release-wechat.mjs",
+    "upload:wechat": "node scripts/release-wechat.mjs --upload",
     "setup:hooks": "node scripts/setup-git-hooks.mjs",
     "check:commit": "node scripts/check-commit-message.mjs",
     "build:h5": "pnpm --dir apps/miniapp build:h5",

@@ -41,7 +41,7 @@ pnpm check:release
 pnpm preview:wechat --api-base-url http://192.168.1.100:18101
 ```
 
-后端启动、IP 变更及预览操作见 [手机预览说明](docs/PHONE_PREVIEW.md)。当前没有上传平台体验版或公开发布，未开通云托管。
+后端启动、IP 变更及同 Wi-Fi 操作见 [手机预览说明](docs/PHONE_PREVIEW.md)。使用移动网络或异地手机开发预览，见 [0 元外网预览](docs/PUBLIC_PREVIEW.md)：本机后端 → 受限网关 → 免费临时 HTTPS 隧道，电脑和进程需要持续运行，朋友需按微信规则获得项目开发权限。当前没有上传平台体验版或公开发布，未开通云托管。
 
 ## 开源与协作
 
