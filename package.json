@@ -1,0 +1,27 @@
+{
+  "name": "love-space",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "共赴山海手记：两个人的旅行地图与回忆时间线",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev:admin": "pnpm --dir apps/admin dev --host 127.0.0.1 --port 15173",
+    "dev:miniapp": "pnpm --dir apps/miniapp dev:h5 --host 127.0.0.1 --port 15174",
+    "build:admin": "pnpm --dir apps/admin build",
+    "build:miniapp": "pnpm --dir apps/miniapp build:mp-weixin",
+    "build:miniapp:preview": "pnpm --dir apps/miniapp build:mp-weixin:preview",
+    "preview:wechat": "node scripts/preview-wechat.mjs",
+    "setup:hooks": "node scripts/setup-git-hooks.mjs",
+    "check:commit": "node scripts/check-commit-message.mjs",
+    "build:h5": "pnpm --dir apps/miniapp build:h5",
+    "check:release": "node scripts/check-release.mjs",
+    "test:release": "node scripts/test-release.mjs",
+    "types:api": "node scripts/generate-api-types.mjs",
+    "notices": "node scripts/generate-notices.mjs"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.10.1",
+    "@playwright/test": "^1.58.2"
+  }
+}

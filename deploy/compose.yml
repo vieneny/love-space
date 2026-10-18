@@ -1,0 +1,56 @@
+name: love-space
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: love_space
+      POSTGRES_USER: love_space
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U love_space -d love_space']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  api:
+    build: ../backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      DEV_LOGIN_ENABLED: 'false'
+      DATABASE_URL: postgresql+psycopg://love_space:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/love_space
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+      WECHAT_APPID: ${WECHAT_APPID:?Set formal WECHAT_APPID}
+      WECHAT_SECRET: ${WECHAT_SECRET:?Set WECHAT_SECRET}
+      PUBLIC_BASE_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+      CORS_ORIGINS: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+      MEDIA_ROOT: /app/data/media
+    volumes:
+      - private_media:/app/data/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+volumes:
+  postgres_data:
+  private_media:
+  caddy_data:
+  caddy_config:

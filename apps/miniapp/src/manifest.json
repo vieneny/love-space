@@ -1,0 +1,16 @@
+{
+  "name": "共赴山海手记",
+  "appid": "",
+  "description": "一起走过的地方，值得记住的日子。",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "vueVersion": "3",
+  "uniStatistics": { "enable": false },
+  "h5": { "title": "共赴山海手记", "router": { "mode": "hash" } },
+  "mp-weixin": {
+    "appid": "",
+    "setting": { "urlCheck": true, "es6": true, "minified": true },
+    "usingComponents": true
+  }
+}

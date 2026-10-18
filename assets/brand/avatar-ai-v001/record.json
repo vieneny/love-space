@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-10-18T07:01:36.090921+00:00",
+  "purpose": "WeChat mini-program profile avatar",
+  "backend": "user-supplied OpenAI-compatible API via bundled imagegen CLI",
+  "provider_model_id": "gpt-image-2.5-flare",
+  "requested": {
+    "size": "1024x1024",
+    "quality": "high",
+    "n": 1
+  },
+  "actual_source": {
+    "file": "master.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGB",
+    "sha256": "d4e7ee2852a960fcae175bb70d3e44ef13c131d9e1dcbcf6e40208f9efdaaa1f"
+  },
+  "prompt": {
+    "file": "prompt.md",
+    "sha256": "8d525549e88029c3bca4f61bdcaaf3278ac67761ec8bc8694af76ea467c7c90d"
+  },
+  "references": [],
+  "postprocessing": {
+    "resize": "Lanczos",
+    "opaque_background": "#285D78",
+    "watermark": {
+      "text": "tomeney",
+      "position_at_1024": [
+        717,
+        809
+      ],
+      "width_at_1024": 102,
+      "color": "#B8BEC5",
+      "opacity": 0.25,
+      "placement": "inside circle, lower right, outside primary emblem",
+      "applied_once": true
+    }
+  },
+  "exports": {
+    "avatar.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 643315,
+      "sha256": "5ca7630dfb75fbb16870eada62f00af42d5b4949f4d149b7b933bebfd1f9d1a8"
+    },
+    "avatar-144.png": {
+      "size": [
+        144,
+        144
+      ],
+      "mode": "RGB",
+      "bytes": 15577,
+      "sha256": "95b1df83d60235f377442504ae31a870ef434b1b09b531daf3f9ef170e35a5e5"
+    }
+  },
+  "verification": {
+    "source_visually_reviewed": true,
+    "thumbnail_and_circular_review": "passed: 64px, 128px, 144px and circular 144px; emblem readable and complete",
+    "wechat_upload": "passed: file chooser uploaded avatar-144.png; square and circular previews visually verified on WeChat registration page",
+    "wechat_upload_history": "First attempt blocked by Chrome extension file URL permission; user enabled it and authorized retry.",
+    "wechat_upload_evidence": "artifacts/wechat-avatar-uploaded.png (git ignored)",
+    "registration_submitted": true,
+    "registration_verification": "User confirmed submission; formal AppID verified on WeChat console on 2026-10-18."
+  },
+  "notes": [
+    "Clean API source preserved as master.png.",
+    "Provider model identifier does not independently verify underlying model provenance.",
+    "No credentials stored in tracked project files."
+  ],
+  "billing": "not queried; provider billing applies"
+}

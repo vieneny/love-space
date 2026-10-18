@@ -1,0 +1,14 @@
+{$PUBLIC_DOMAIN} {
+    encode zstd gzip
+    handle /api/* {
+        reverse_proxy api:18100
+    }
+    handle /health {
+        reverse_proxy api:18100
+    }
+    handle {
+        root * /srv/admin
+        try_files {path} /index.html
+        file_server
+    }
+}

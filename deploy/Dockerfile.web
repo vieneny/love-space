@@ -1,0 +1,4 @@
+FROM caddy:2-alpine
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY apps/admin/dist /srv/admin
+COPY docs/THIRD_PARTY_NOTICES.txt /srv/admin/third-party-notices.txt

@@ -1,0 +1,30 @@
+{
+  "pages": [
+    { "path": "pages/map/index", "style": { "navigationBarTitleText": "我们的足迹" } },
+    { "path": "pages/timeline/index", "style": { "navigationBarTitleText": "时光手记", "enablePullDownRefresh": true } },
+    { "path": "pages/trips/index", "style": { "navigationBarTitleText": "一起出发" } },
+    { "path": "pages/together/index", "style": { "navigationBarTitleText": "一起的日常" } },
+    { "path": "pages/profile/index", "style": { "navigationBarTitleText": "我们的空间" } },
+    { "path": "pages/login/index", "style": { "navigationBarTitleText": "共赴山海手记" } },
+    { "path": "pages/memory/edit", "style": { "navigationBarTitleText": "写一页手记" } },
+    { "path": "pages/memory/detail", "style": { "navigationBarTitleText": "回忆详情" } },
+    { "path": "pages/trips/edit", "style": { "navigationBarTitleText": "计划一段旅行" } },
+    { "path": "pages/trips/detail", "style": { "navigationBarTitleText": "旅行手记" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#F5F8FA",
+    "backgroundColor": "#F5F8FA",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#7E929C", "selectedColor": "#24647A", "backgroundColor": "#FFFFFF", "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/map/index", "text": "地图" },
+      { "pagePath": "pages/timeline/index", "text": "时光" },
+      { "pagePath": "pages/trips/index", "text": "旅行" },
+      { "pagePath": "pages/together/index", "text": "一起" },
+      { "pagePath": "pages/profile/index", "text": "我们" }
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+# 最低成本体验版路径（2026-10-18 核验）
+
+用户已选择：个人主体，先体验，并明确暂不开通云托管。当前不买域名、不买服务器、不购买认证或自动续费服务，已发生的资源购买费用为 0 元（不含另行调用生图 API 的服务商费用，未查询账单）。
+
+## 先做免费的本地验证
+
+本仓库已完成本地 API、H5 和微信官方 CLI 预览，用户确认已在手机微信中登录并进入地图。使用现有电脑 Python 后端，真实微信登录，关闭开发身份和后台登录，数据与本地开发库隔离。公开示例为 `http://192.168.1.100:18101`，请替换为自己电脑的私网地址。开发者工具与手机开启调试可跳过域名校验，手机不能使用自己的 127.0.0.1。这是开发预览，不等于普通用户可用的线上体验版。电脑必须开机并运行后端；复用命令及重启说明见 [PHONE_PREVIEW.md](PHONE_PREVIEW.md)。
+
+## 两条正式联网路线
+
+### A. 微信云托管私有调用：先核算，无需自购通讯域名
+
+微信官方网络文档明确：使用 wx.cloud.callContainer / connectContainer 时，无需配置通讯域名；微信云托管支持 Python 容器。因此没有域名不必立即购买。当前客户端基础使用标准 HTTPS API，采用此路线需实现 callContainer 请求适配，以及照片上传/访问的云存储适配，不能只替换 API 地址。
+
+要核验账号可开通性、当前控制台试用额度、数据库和存储费用、闲置成本、到期后价格。官方旧落地页仍展示“400 元/3个月”等试用宣传，不能当作此账号已获额度，更不能据此承诺永久免费。数据库与上传图片不得放在随容器销毁的临时目录；必须使用持久化数据库和私有对象存储。
+
+本次已查看开通页和官方条款：试用赠送额度有效3个月，超额或到期后按量计费，不能理解为到期自动免费停服；开通还涉及将主体、管理员等注册信息同步给腾讯云。用户选择暂不开通，因此未接受条款、未创建环境、未部署收费实例。当前生产数据库使用 PostgreSQL；云托管内置 MySQL 不能只换连接串，需要适配邀请核销等 SQL 与并发行为。照片也需专门验证私有上传、访问和解绑后撤销，不能仅改 API 地址。
+
+### B. 内地轻量服务器＋备案域名＋免费 TLS
+
+API、后台和数据库先共用一台服务器；照片可先用备份保护的持久卷，增长后迁移 COS，避免首期购买独立数据库/缓存套餐。按最小部署启动，异步 worker 后续按真实任务启用。
+
+官方网络规则要求普通服务器域名 HTTPS、非 IP/localhost、ICP备案。境外服务器不是绕开小程序服务器域名备案的保证。域名与小程序备案不是同一项手续。
+
+腾讯 Lighthouse 官网当前公开宣传新用户 4核4G3M 首年109元，常规入门套餐45元/月、459元/年；实际资格和成交价以账号订单页为准。不要先按常规高价购买，先核对新用户活动。官方提供免费 DV 证书，证书有有效期，需自动续期或按供应商规则续签。
+
+域名先查询 .cn 的注册价、续费价与可备案性，并对照 .com。首年1元等促销后缀可能有较高续费价，“.com首年0元”也可能要求2年起购。只买一个正常注册价的域名，不买溢价/一口价，不附加收费 DNS、证书、建站服务。品牌和域名可用性尚未确认，本次未下单。
+
+万网官网本次公开 .cn 价格为首年38元（标注日常注册39元），续费42元/年。腾讯 .cn 动态价本次未可靠读出。没有查询具体域名可用性；精品、溢价和促销资格以结算页为准。若同时符合109元首年服务器活动和38元域名活动，基础资源首年合计约147元，不含后续认证、特殊资质等费用；这只是条件预算，不是已下单报价。服务续费需重新核算。
+
+| 阶段 | 域名费用 | 服务器费用 | 当前状态 |
+| --- | --- | --- | --- |
+| 本地开发/H5/同Wi-Fi手机预览 | 0 | 0，使用现有电脑 | 已登录进入手机地图，需电脑持续运行 |
+| 微信云托管体验 | 自购通讯域名可为0 | 依当前账号额度、容器、数据库、存储计费 | 用户选择暂不开通；未创建环境；适配未开发 |
+| 自建HTTPS后端 | .cn公开首年38、续费42 | 109首年活动需资格；非活动价格更高 | 备用部署已准备，未购买 |
+
+## 个人主体与类目
+
+官方云托管FAQ明确“面向全用户”，个人主体可以使用；必须先有微信小程序或公众号。这只证明资格，不代表本账号有免费额度或已经开通。
+
+个人类目包含工具/日历和备忘录；官方备忘录说明限制“用户原创内容的传播及公开访问”。个人类目没有对本项目双人共享图文给出明确审核结论，不能承诺一定通过。当前不增加公开游记社区或陌生人婚恋匹配；先核对实际可选类目，必要时在后台咨询审核要求，不能通过虚报功能规避要求。以后正式商用再评估个体工商户/企业主体与实际服务类目。
+
+官方备案指引明确备案关系到后续版本发布。本次未找到“体验版”专门例外，因此不承诺体验版一定免备案；依据实际账号提示办理。域名备案、小程序备案与微信认证是不同事项。本次均未代办、未支付。
+
+## 注册资料与品牌
+
+- 名称：共赴山海手记；可选简称留空。用户已提交个人主体注册，正式 AppID 已在后台核对并配置，具体值不写入公开仓库；前端品牌已统一。此前“共赴时光”为暂用名称，曾被后台提示与已有公众号重复。
+- 简介：记录两个人的旅行足迹、重要时刻与共同回忆。
+- 头像：`assets/brand/avatar-ai-v001/avatar-144.png`，144×144 PNG，已上传微信并验证方形/圆形预览；管理后台与小程序已使用同一头像。
+- 主体与服务类目按实际记录工具功能选择，不把现有情侣关系记录填写为陌生人婚恋交友。最终以后台可选类目及要求为准。
+
+## 官方来源
+
+- https://developers.weixin.qq.com/miniprogram/dev/framework/ability/network.html
+- https://cloud.weixin.qq.com/cloudrun
+- https://cloud.tencent.com/product/lighthouse
+- https://cloud.tencent.com/product/domain
+- https://wanwang.aliyun.com/domain
+- https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/info/faq.html
+- https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/Billing/price.html
+- https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/Billing/faq.html
+- https://developers.weixin.qq.com/miniprogram/product/service/wxcloudrun.html
+- https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/guide/mysql/
+- https://developers.weixin.qq.com/miniprogram/product/material/
+- https://developers.weixin.qq.com/miniprogram/product/record/guidelines
+- https://developers.weixin.qq.com/miniprogram/product/record/record_faq.html
+
+本次未购买云资源、域名或认证服务，未开通自动续费。
